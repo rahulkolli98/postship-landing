@@ -71,9 +71,15 @@ The codebase is ready for Cloudflare Pages via **Workers Builds** (the native Cl
 2. In Cloudflare dashboard → **Workers & Pages** → **Create application** → **Import a repository**.
 3. Select the GitHub repo. Set:
    - Build command: `npm run build`
-   - Deploy command: `npm run deploy`
+   - Deploy command: `npm run deploy` (production) / `npm run upload` (preview)
 4. **Worker name in the dashboard must match `name: "postship-landing"`** in `wrangler.jsonc` (Cloudflare enforces this).
 5. Save and Deploy. Cloudflare auto-detects Next.js + OpenNext, builds on every push, deploys to `postship-landing.<account>.workers.dev`.
+
+### Preview URLs for non-production branches (NOT enabled)
+
+Per https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/, the "Builds for non-production branches" toggle in **Settings → Build → Branch control** controls whether branch builds run on non-production branches.
+
+We are **leaving this OFF** for the limited plan so only pushes to the production branch (`main`) trigger builds. Every push to any other branch will be skipped entirely (no build consumption). If you later want preview URLs for PRs, enable the toggle and configure the non-production branch deploy command to `npm run upload` (not `npm run deploy`). The `npm run upload` script uses `wrangler versions upload` which creates a preview version without promoting it to active deployment — this is what makes preview URLs work without polluting your production traffic.
 
 ## Design system
 
