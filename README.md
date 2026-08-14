@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Postship — Landing Page
 
-## Getting Started
+The public marketing site for Postship. Pre-launch. Captures waitlist emails via Convex.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) + Tailwind v4 + shadcn/ui + Convex + `@opennextjs/cloudflare` for Cloudflare Pages.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev              # Next.js dev server on :3000
+# In another terminal:
+npx convex dev           # Convex backend on :3210
+# Optional: run smoke tests
+npm test
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project layout
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+├── app/
+│   ├── layout.tsx             # Root layout — fonts, metadata, Convex provider
+│   ├── page.tsx               # Landing page composition (TopNav → Hero → ... → Footer)
+│   ├── globals.css            # Tailwind v4 + design3 token bridge
+│   ├── api/waitlist/route.ts   # POST /api/waitlist (HTTP shim for non-React clients)
+│   └── {hero,button,waitlist}-smoke/  # internal Playwright smoke pages (delete at TASK-012)
+├── components/
+│   ├── ui/                    # shadcn/ui primitives (button.tsx)
+│   ├── ConvexClientProvider.tsx
+│   └── landing/               # All landing page sections
+│       ├── TopNav.tsx
+│       ├── Hero.tsx
+│       ├── HowItWorks.tsx
+│       ├── LayeredCapabilities.tsx
+│       ├── StatsNumbers.tsx
+│       ├── Pricing.tsx
+│       ├── Faq.tsx
+│       ├── FinalCta.tsx       # Holds the waitlist form
+│       ├── Footer.tsx
+│       ├── Waitlist.tsx        # The form (useMutation(api.waitlist.join))
+│       └── DemoVideo.tsx       # placeholder stub
+├── lib/utils.ts               # shadcn cn() helper
+convex/
+├── schema.ts                  # waitlist table only — landing app scope
+├── waitlist.ts                 # waitlist.join mutation
+└── _generated/                # Convex codegen (typed API client)
+tests/
+├── smoke.spec.ts              # 11 Playwright tests covering Phase 0
+└── screenshots/               # One-shot visual artifacts
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Script | Purpose |
+|---|---|
+| `npm run dev` | Next.js dev server on :3000 |
+| `npm run build` | Next.js build (used by OpenNext's CLI) |
+| `npm run preview` | OpenNext Cloudflare build + local Workers preview |
+| `npm run deploy` | OpenNext Cloudflare build + deploy to Cloudflare |
+| `npm run upload` | OpenNext Cloudflare build + upload as a version (no deploy) |
+| `npm run cf-typegen` | Generate `cloudflare-env.d.ts` from wrangler config |
+| `npm test` | Playwright smoke tests (auto-spawns dev server) |
+| `npm run test:headed` | Same tests, visible browser |
 
-To learn more about Next.js, take a look at the following resources:
+## Deploying
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The codebase is ready for Cloudflare Pages via **Workers Builds** (the native Cloudflare CI/CD). Steps:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Push this repo to GitHub.
+2. In Cloudflare dashboard → **Workers & Pages** → **Create application** → **Import a repository**.
+3. Select the GitHub repo. Set:
+   - Build command: `npm run build`
+   - Deploy command: `npm run deploy`
+4. **Worker name in the dashboard must match `name: "postship-landing"`** in `wrangler.jsonc` (Cloudflare enforces this).
+5. Save and Deploy. Cloudflare auto-detects Next.js + OpenNext, builds on every push, deploys to `postship-landing.<account>.workers.dev`.
 
-## Deploy on Vercel
+## Design system
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See `docs/design3.md` at the repo root for the design tokens. The `src/app/globals.css` file registers them as Tailwind v4 utilities (`bg-surface-light`, `text-on-surface-muted`, etc.).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+UNLICENSED — internal project.
