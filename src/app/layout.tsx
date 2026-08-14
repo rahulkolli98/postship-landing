@@ -133,7 +133,11 @@ export const metadata: Metadata = {
   },
 
   // ─── Manifest ───────────────────────────────────────────
-  manifest: `${SITE_URL}/site.webmanifest`,
+  // Use a relative path so it resolves to whatever origin the page is
+  // served from (workers.dev during the Cloudflare preview, postship.app
+  // once the custom domain is attached). Avoids the cross-origin fetch
+  // that caused CORS errors during Phase 0 deploys.
+  manifest: "/site.webmanifest",
 
   // ─── Apple Web App (iOS PWA metadata) ────────────────────
   appleWebApp: {
