@@ -21,7 +21,7 @@ export function Faq() {
     },
     {
       q: "Does the AI actually adapt the copy, or does it just truncate?",
-      a: "It adapts. LinkedIn gets long-form. X gets tight. TikTok gets native. Threads gets conversational. You set a tone preset once and the adapter rewrites within those constraints. The original description is preserved — you can compare side by side before publishing.",
+      a: "It adapts, not just truncates. LinkedIn gets long-form. X gets tight. TikTok gets native. Threads gets conversational. You set a tone preset once and the adapter rewrites within those constraints. Your original description is preserved, so you can compare side by side before you publish.",
     },
     {
       q: "Which platforms are supported in v1?",
@@ -33,7 +33,7 @@ export function Faq() {
     },
     {
       q: "How long does the trial last, and what happens when it ends?",
-      a: "The trial is 7 days and includes 5 posts total. When you hit 5 posts or day 7, whichever comes first, the workspace prompts you to upgrade to Creator or Pro. Nothing is deleted — your draft posts and tone presets stay. You only lose the ability to publish until you upgrade.",
+      a: "The trial is 7 days and includes 5 posts total. When you hit 5 posts or day 7, whichever comes first, the workspace prompts you to upgrade to Creator or Pro. Nothing is deleted. Your draft posts and tone presets stay. You only lose the ability to publish until you upgrade.",
     },
     {
       q: "Can I pause or cancel anytime?",
@@ -41,7 +41,7 @@ export function Faq() {
     },
     {
       q: "Is my data safe?",
-      a: "Yes. Postship is SOC 2 Type II compliant. All platform OAuth tokens are encrypted at rest. We don't read your videos, we don't read your descriptions beyond the moment of adaptation, and we never sell or share your data.",
+      a: "SOC 2 audit is on the roadmap for this year. OAuth tokens get encrypted at rest once we start storing them. We don't read your videos, we don't read your descriptions beyond the moment of adaptation, and we never sell or share your data.",
     },
   ];
 
@@ -56,7 +56,7 @@ export function Faq() {
             The questions, answered.
           </h2>
           <p className="max-w-2xl font-sans text-[17px] leading-[1.55] text-on-surface-muted">
-            If yours isn't here, the line below goes straight to me.
+            If yours isn&apos;t here, the line below goes straight to me.
           </p>
         </div>
 

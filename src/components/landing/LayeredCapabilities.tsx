@@ -47,7 +47,7 @@ export function LayeredCapabilities() {
           One composer. Four layers.
         </h2>
         <p className="mb-10 max-w-2xl font-sans text-[17px] leading-[1.55] text-on-surface-muted">
-          The system is built as a four-layer stack. Each layer has a single job — drop the videos, generate the captions, hit publish, track the result.
+          The system is built as a four-layer stack. Each layer has a single job. Drop the videos. Generate the captions. Hit publish. Track what happened.
         </p>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

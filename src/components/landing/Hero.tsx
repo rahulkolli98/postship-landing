@@ -42,7 +42,7 @@ export function Hero() {
       </h1>
 
       <p className="mx-auto mb-8 max-w-[580px] font-sans text-[17px] leading-[1.55] text-on-surface-muted">
-        One master description. Six platform-native captions. One click ships to YouTube, LinkedIn, X, Threads, Instagram, and TikTok — without rewriting the same idea six times.
+        One master description. Six platform-native captions. One click ships to YouTube, LinkedIn, X, Threads, Instagram, and TikTok. No rewriting the same idea six times.
       </p>
 
       <div className="mb-12 flex flex-col items-center justify-center gap-3">
