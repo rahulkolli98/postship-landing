@@ -150,14 +150,17 @@ export const metadata: Metadata = {
 // ─── Viewport (separated from metadata in Next.js 14+) ──────
 // Per the Next.js docs, `themeColor` and `colorScheme` are deprecated in
 // metadata. They live in the `viewport` export now.
+//
+// The landing page is light-only by design (see docs/design3.md: "No dark
+// mode. This variant is the landing page only."). colorScheme: "light"
+// signals that to the browser so dark-mode-aware UI (form controls,
+// scrollbars) renders in light style. themeColor is a single value matching
+// the pure-white substrate `#FFFFFF`.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e0e0c" },
-  ],
+  themeColor: "#ffffff",
   colorScheme: "light",
 };
 
