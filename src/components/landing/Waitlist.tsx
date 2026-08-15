@@ -166,12 +166,12 @@ export function Waitlist() {
       setStatus("success");
       setMessage(
         data.alreadyJoined
-          ? "You're already on the list — we'll be in touch."
-          : "You're on the list. We'll email you when Postship ships.",
+          ? "You're already on the list. We'll be in touch."
+          : "You're on the list. We'll ping you when Postship ships.",
       );
     } catch {
       setStatus("error");
-      setMessage("Network glitch on our side. Try once more in a sec?");
+      setMessage("Network went on strike. Give it another go.");
     }
   }
 

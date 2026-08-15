@@ -25,9 +25,13 @@ import { z } from "zod";
  * Body:  { "email": "user@example.com", "source": "footer_waitlist", "turnstileToken": "..." }
  * Returns:
  *   200 { ok: true, id: "...", alreadyJoined: bool }
- *   400 { ok: false, error: "Invalid email" }
- *   403 { ok: false, error: "Bot challenge failed" }  (Turnstile failed)
- *   500 { ok: false, error: "Couldn't add you to the list — try again." }
+ *   400 { ok: false, error: "..." }                 (bad input)
+ *   403 { ok: false, error: "..." }                 (Turnstile failed)
+ *   500 { ok: false, error: "..." }                 (server-side failure)
+ *
+ * Error strings are deliberately dry / slightly sarcastic to match the rest
+ * of the site copy (e.g. "Stop rewriting. Start shipping."). They never
+ * leak server-side internals — see H3 in the security review.
  */
 
 const Body = z.object({
@@ -96,7 +100,7 @@ export async function POST(request: Request) {
     json = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, error: "Invalid JSON body" },
+      { ok: false, error: "We couldn't parse that. JSON body expected, got whatever that was." },
       { status: 400 },
     );
   }
@@ -104,7 +108,7 @@ export async function POST(request: Request) {
   const parsed = Body.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, error: "Invalid email" },
+      { ok: false, error: "That doesn't look like an email. Typo, maybe?" },
       { status: 400 },
     );
   }
@@ -117,7 +121,7 @@ export async function POST(request: Request) {
   const verify = await verifyTurnstile(parsed.data.turnstileToken, remoteIp);
   if (!verify.success) {
     return NextResponse.json(
-      { ok: false, error: "Bot challenge failed" },
+      { ok: false, error: "Bot check says you're a bot. If you're not, give it another go." },
       { status: 403 },
     );
   }
@@ -133,7 +137,7 @@ export async function POST(request: Request) {
     // Generic message — never leak Convex internals. The real error is
     // visible in the Cloudflare dashboard's Workers logs.
     return NextResponse.json(
-      { ok: false, error: "Couldn't add you to the list — try again." },
+      { ok: false, error: "Oof. That one's on us. Try again, and ping us if it keeps happening." },
       { status: 500 },
     );
   }

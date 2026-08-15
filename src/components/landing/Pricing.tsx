@@ -83,7 +83,7 @@ export function Pricing() {
             </ul>
 
             <p className="mb-2 border-b border-dashed border-border pb-2 font-mono text-[10px] font-semibold tracking-[0.18em] text-on-surface uppercase">
-              What you'd miss without upgrading:
+              What you&apos;d miss without upgrading:
             </p>
             <ul className="mb-4 grid gap-2">
               <li className="relative pl-[18px] font-sans text-[13px] leading-[1.5] text-on-surface-muted line-through decoration-border-strong">
@@ -220,7 +220,7 @@ export function Pricing() {
               Unlimited shipping. Every platform. Every day.
             </p>
             <p className="mb-5 border-t border-border pt-3 font-sans text-[13px] leading-[1.55] text-on-surface-muted">
-              If you ship to all 6 platforms every weekday, this plan pays for itself in the first week. You stop rewriting the same idea six times — and you get the analytics to see what's working.
+              If you ship to all 6 platforms every weekday, this plan pays for itself in the first week. You stop rewriting the same idea six times, and you get the analytics to see what&apos;s working.
             </p>
 
             <ul className="mb-5 grid gap-2">
@@ -273,7 +273,7 @@ export function Pricing() {
         </div>
 
         <p className="mt-5 text-center font-mono text-[11px] tracking-[0.08em] text-on-surface-muted uppercase">
-          No contracts. The trial doesn't require a credit card. Cancel anytime from workspace settings.
+          No contracts. The trial doesn&apos;t require a credit card. Cancel anytime from workspace settings.
         </p>
       </div>
     </section>

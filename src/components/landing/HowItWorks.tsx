@@ -14,12 +14,12 @@ export function HowItWorks() {
     {
       n: "01",
       heading: "Drop your pre-shot videos.",
-      body: "Drag 3 to 6 vertical clips into the canvas. Postship reads the file names and shot order — no metadata entry, no template setup, no manual sort.",
+      body: "Drag 3 to 6 vertical clips into the canvas. We read the file names and shot order, so there's no metadata entry, no template setup, no manual sort.",
     },
     {
       n: "02",
       heading: "Write the description once.",
-      body: "One paragraph, in your voice. Postship's adapter rewrites it for each platform's tone and length — LinkedIn long-form, X tight, Threads conversational, TikTok native.",
+      body: "One paragraph, in your voice. Our adapter rewrites it for each platform's tone and length. LinkedIn long-form, X tight, Threads conversational, TikTok native.",
     },
     {
       n: "03",
