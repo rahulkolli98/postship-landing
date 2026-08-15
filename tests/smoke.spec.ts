@@ -69,6 +69,7 @@ test.describe("Phase 0 — landing page boots", () => {
       data: {
         email: `founder-${Date.now()}@postship.app`,
         source: "playwright_smoke_test",
+        turnstileToken: "test-bypass",
       },
     });
     expect(first.status()).toBe(200);
@@ -78,12 +79,16 @@ test.describe("Phase 0 — landing page boots", () => {
     expect(typeof firstBody.id).toBe("string");
 
     const dup = await request.post("/api/waitlist", {
-      data: { email: `founder-${Date.now()}@postship.app`, source: "x" },
+      data: {
+        email: `founder-${Date.now()}@postship.app`,
+        source: "x",
+        turnstileToken: "test-bypass",
+      },
     });
     expect(dup.status()).toBe(200);
 
     const bad = await request.post("/api/waitlist", {
-      data: { email: "not-an-email" },
+      data: { email: "not-an-email", turnstileToken: "test-bypass" },
     });
     expect(bad.status()).toBe(400);
     const badBody = await bad.json();

@@ -33,6 +33,12 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
+    // Tests run against the dev server, which is not configured with real
+    // Turnstile keys. The API route honours TURNSTILE_DEV_BYPASS=true to
+    // skip the bot challenge in this mode — production never sets this.
+    env: {
+      TURNSTILE_DEV_BYPASS: "true",
+    },
   },
   projects: [
     {

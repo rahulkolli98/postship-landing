@@ -1,36 +1,125 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@/../convex/_generated/api";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 /**
  * FR-014: Waitlist Capture component.
  *
- * PRD § 8 screen: footer (or inline) email field + submit button.
- * Uses Convex `useMutation` to call `waitlist.join` directly from the client.
- * No intermediary API route — this is the production path.
+ * Submits through `POST /api/waitlist`, which verifies a Cloudflare Turnstile
+ * challenge server-side before calling the Convex `waitlist.join` mutation.
  *
- * Validates email client-side via a basic regex before submitting (server
- * also validates in the mutation). Shows three states:
- *   - idle: email input + "Join the waitlist" button
- *   - submitting: button disabled with spinner
- *   - success: "You're on the list" message, input replaced
- *   - error: error message under input (mutation rejected, network down, etc.)
+ * Flow:
+ *   1. Turnstile widget renders when the component mounts and emits a token.
+ *   2. User enters email + clicks "Join the waitlist".
+ *   3. Browser POSTs { email, source, turnstileToken } to /api/waitlist.
+ *   4. Server verifies token → calls Convex → returns the row id.
  *
- * Email is deduplicated server-side via the `by_email` index in schema.ts.
+ * States: idle | submitting | success | error.
+ *
+ * The Turnstile widget is loaded from
+ * `https://challenges.cloudflare.com/turnstile/v0/api.js` (Cloudflare's
+ * CDN). The script is loaded once per page and reused across renders via
+ * a singleton guard.
+ *
+ * In dev / Playwright (TURNSTILE_DEV_BYPASS=true), the widget still renders
+ * but the server skips verification, so local flows keep working without
+ * provisioning a Turnstile site key.
  */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TURNSTILE_SCRIPT_SRC =
+  "https://challenges.cloudflare.com/turnstile/v0/api.js";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        element: HTMLElement,
+        options: {
+          sitekey: string;
+          callback: (token: string) => void;
+          "error-callback"?: () => void;
+          "expired-callback"?: () => void;
+        },
+      ) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
+
+let turnstileScriptPromise: Promise<void> | null = null;
+function loadTurnstileScript(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (window.turnstile) return Promise.resolve();
+  if (turnstileScriptPromise) return turnstileScriptPromise;
+
+  turnstileScriptPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[src="${TURNSTILE_SCRIPT_SRC}"]`,
+    );
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", () => reject(new Error("Turnstile script failed")));
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = TURNSTILE_SCRIPT_SRC;
+    script.async = true;
+    script.defer = true;
+    script.addEventListener("load", () => resolve());
+    script.addEventListener("error", () => reject(new Error("Turnstile script failed")));
+    document.head.appendChild(script);
+  });
+  return turnstileScriptPromise;
+}
+
 export function Waitlist() {
   const [email, setEmail] = useState("");
-  const [source] = useState("footer_waitlist");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string>("");
-  const join = useMutation(api.waitlist.join);
+
+  // Turnstile widget plumbing
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
+  const widgetIdRef = useRef<string | null>(null);
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+
+  useEffect(() => {
+    // Skip widget rendering if no site key is configured (e.g. local dev
+    // before keys are set up). The server's bypass flag handles the rest.
+    if (!siteKey) return;
+    let cancelled = false;
+
+    loadTurnstileScript()
+      .then(() => {
+        if (cancelled || !window.turnstile || !turnstileContainerRef.current) return;
+        const id = window.turnstile.render(turnstileContainerRef.current, {
+          sitekey: siteKey,
+          callback: (token) => setTurnstileToken(token),
+          "expired-callback": () => setTurnstileToken(""),
+          "error-callback": () => setTurnstileToken(""),
+        });
+        widgetIdRef.current = id;
+      })
+      .catch(() => {
+        // Widget failed to load — submit will surface a clearer error.
+      });
+
+    return () => {
+      cancelled = true;
+      if (widgetIdRef.current && window.turnstile) {
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch {
+          // ignore — widget already torn down
+        }
+        widgetIdRef.current = null;
+      }
+    };
+  }, [siteKey]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,18 +131,47 @@ export function Waitlist() {
     setStatus("submitting");
     setMessage("");
     try {
-      const result = await join({ email, source });
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          source: "footer_waitlist",
+          turnstileToken: turnstileToken || "dev-bypass",
+        }),
+      });
+      const data = (await res.json()) as {
+        ok: boolean;
+        id?: string;
+        alreadyJoined?: boolean;
+        error?: string;
+      };
+      if (!res.ok || !data.ok) {
+        setStatus("error");
+        setMessage(
+          data.error ??
+            "Something went sideways on our end. Give it another shot.",
+        );
+        // Reset the widget so the user can retry without a stale token.
+        if (widgetIdRef.current && window.turnstile) {
+          try {
+            window.turnstile.reset(widgetIdRef.current);
+            setTurnstileToken("");
+          } catch {
+            // ignore
+          }
+        }
+        return;
+      }
       setStatus("success");
       setMessage(
-        result.alreadyJoined
+        data.alreadyJoined
           ? "You're already on the list — we'll be in touch."
           : "You're on the list. We'll email you when Postship ships.",
       );
-    } catch (err) {
+    } catch {
       setStatus("error");
-      setMessage(
-        err instanceof Error ? err.message : "Something went wrong. Try again.",
-      );
+      setMessage("Network glitch on our side. Try once more in a sec?");
     }
   }
 
@@ -72,7 +190,7 @@ export function Waitlist() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex w-full max-w-md flex-col gap-2"
+      className="flex w-full max-w-md flex-col gap-3"
       noValidate
     >
       <div className="flex gap-2">
@@ -92,12 +210,23 @@ export function Waitlist() {
         />
         <Button
           type="submit"
-          disabled={status === "submitting" || email.length === 0}
+          disabled={
+            status === "submitting" ||
+            email.length === 0 ||
+            (Boolean(siteKey) && turnstileToken.length === 0)
+          }
           data-testid="waitlist-submit"
         >
           {status === "submitting" ? "Joining…" : "Join the waitlist"}
         </Button>
       </div>
+      {siteKey ? (
+        <div
+          ref={turnstileContainerRef}
+          data-testid="turnstile-widget"
+          className="min-h-[65px]"
+        />
+      ) : null}
       {status === "error" && message ? (
         <p
           data-testid="waitlist-error"
